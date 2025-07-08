@@ -1,83 +1,92 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { catchError, map, Observable } from 'rxjs';
+import { catchError, map, Observable, throwError } from 'rxjs';
 import { environment } from '../../environments/environment.development';
-import { DayForecast, ForecastItem, ForecastResponse, WeatherDisplay, WeatherResponse } from '../models/weather.interface';
+import { ForecastItem, ForecastResponse, WeatherResponse } from '../models/weather-api.interface';
+import { DayForecast, WeatherDisplay } from '../models/weather.interface';
+
+export type LocationParams = 
+  | { type: 'city'; city: string }
+  | { type: 'coordinates'; lat: number; lon: number };
 
 @Injectable({
   providedIn: 'root'
 })
 export class WeatherService {
-
   private readonly http = inject(HttpClient);
-
   private readonly apiUrl = environment.apiUrl;
   private readonly API_KEY = environment.API_KEY;
 
-  getWeatherData(city: string): Observable<WeatherDisplay> {
-    const params = new HttpParams()
-      .set('q', city)
-      .set('appid', this.API_KEY)
-      .set('units', 'metric')
-      .set('lang', 'fr');
+  getWeatherData(location: LocationParams): Observable<WeatherDisplay> {
+    const params = this.buildParams(location);
+    const isCurrentLocation = location.type === 'coordinates';
     
     return this.http.get<WeatherResponse>(`${this.apiUrl}/weather`, { params })
       .pipe(
-        map((response: WeatherResponse) => this.mapWeatherResponse(response, false)),
-        catchError(error => {
-          throw error;
-        })
+        map((response: WeatherResponse) => this.mapWeatherResponse(response, isCurrentLocation)),
+        catchError(this.handleError)
       );
+  }
+
+  getForecastData(location: LocationParams): Observable<DayForecast[]> {
+    const params = this.buildParams(location);
+    
+    return this.http.get<ForecastResponse>(`${this.apiUrl}/forecast`, { params })
+      .pipe(
+        map((response: ForecastResponse) => this.mapForecastResponse(response)),
+        catchError(this.handleError)
+      );
+  }
+
+  getWeatherByCity(city: string): Observable<WeatherDisplay> {
+    return this.getWeatherData({ type: 'city', city });
   }
 
   getWeatherByCoordinates(lat: number, lon: number): Observable<WeatherDisplay> {
-    const params = new HttpParams()
-      .set('lat', lat.toString())
-      .set('lon', lon.toString())
-      .set('appid', this.API_KEY)
-      .set('units', 'metric')
-      .set('lang', 'fr');
-    
-    return this.http.get<WeatherResponse>(`${this.apiUrl}/weather`, { params })
-      .pipe(
-        map((response: WeatherResponse) => this.mapWeatherResponse(response, true)),
-        catchError(error => {
-          throw error;
-        })
-      );
+    return this.getWeatherData({ type: 'coordinates', lat, lon });
   }
 
-  getForecastData(city: string): Observable<DayForecast[]> {
-    const params = new HttpParams()
-      .set('q', city)
-      .set('appid', this.API_KEY)
-      .set('units', 'metric')
-      .set('lang', 'fr');
-    
-    return this.http.get<ForecastResponse>(`${this.apiUrl}/forecast`, { params })
-      .pipe(
-        map((response: ForecastResponse) => this.mapForecastResponse(response)),
-        catchError(error => {
-          throw error;
-        })
-      );
+  getForecastByCity(city: string): Observable<DayForecast[]> {
+    return this.getForecastData({ type: 'city', city });
   }
 
   getForecastByCoordinates(lat: number, lon: number): Observable<DayForecast[]> {
-    const params = new HttpParams()
-      .set('lat', lat.toString())
-      .set('lon', lon.toString())
+    return this.getForecastData({ type: 'coordinates', lat, lon });
+  }
+
+  private buildParams(location: LocationParams): HttpParams {
+    let params = new HttpParams()
       .set('appid', this.API_KEY)
       .set('units', 'metric')
       .set('lang', 'fr');
+
+    if (location.type === 'city') {
+      params = params.set('q', location.city);
+    } else {
+      params = params
+        .set('lat', location.lat.toString())
+        .set('lon', location.lon.toString());
+    }
+
+    return params;
+  }
+
+  private handleError(error: any): Observable<never> {
+    console.error('Erreur lors de l\'appel à l\'API météo:', error);
     
-    return this.http.get<ForecastResponse>(`${this.apiUrl}/forecast`, { params })
-      .pipe(
-        map((response: ForecastResponse) => this.mapForecastResponse(response)),
-        catchError(error => {
-          throw error;
-        })
-      );
+    let errorMessage = 'Une erreur est survenue lors de la récupération des données météo.';
+    
+    if (error.status === 404) {
+      errorMessage = 'Ville non trouvée. Veuillez vérifier l\'orthographe.';
+    } else if (error.status === 401) {
+      errorMessage = 'Clé API invalide.';
+    } else if (error.status === 429) {
+      errorMessage = 'Limite d\'appels API atteinte. Veuillez réessayer plus tard.';
+    } else if (error.status === 0) {
+      errorMessage = 'Pas de connexion internet.';
+    }
+
+    return throwError(() => new Error(errorMessage));
   }
 
   private mapWeatherResponse(response: WeatherResponse, isCurrentLocation: boolean = false): WeatherDisplay {
@@ -95,15 +104,13 @@ export class WeatherService {
   }
 
   private mapForecastResponse(response: ForecastResponse): DayForecast[] {
-    // Grouper les prévisions par jour (l'API retourne des données toutes les 3h)
     const dailyForecasts = new Map<string, ForecastItem[]>();
-    const today = new Date().toISOString().split('T')[0]; // Date d'aujourd'hui
+    const today = new Date().toISOString().split('T')[0];
     
     response.list.forEach(item => {
       const date = new Date(item.dt * 1000);
-      const dateKey = date.toISOString().split('T')[0]; // Format YYYY-MM-DD
+      const dateKey = date.toISOString().split('T')[0];
       
-      // Exclure les prévisions d'aujourd'hui
       if (dateKey === today) return;
       
       if (!dailyForecasts.has(dateKey)) {
@@ -112,25 +119,20 @@ export class WeatherService {
       dailyForecasts.get(dateKey)!.push(item);
     });
 
-    // Convertir en format d'affichage (prendre les 5 premiers jours à partir de demain)
     const result: DayForecast[] = [];
     let count = 0;
     
     for (const [dateKey, forecasts] of dailyForecasts) {
       if (count >= 5) break;
       
-      // Prendre la prévision du milieu de journée (vers 12h) ou la première disponible
-      const midDayForecast = forecasts.find(f => {
-        const hour = new Date(f.dt * 1000).getHours();
-        return hour >= 11 && hour <= 13;
-      }) || forecasts[0];
-
+      const midDayForecast = this.findMidDayForecast(forecasts);
+      
       const date = new Date(dateKey);
-      const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+      const dayName = this.getDayName(count, date);
       
       result.push({
         date: dateKey,
-        dayName: count === 0 ? 'Demain' : dayNames[date.getDay()],
+        dayName,
         temperature: Math.round(midDayForecast.main.temp),
         tempMin: Math.round(Math.min(...forecasts.map(f => f.main.temp_min))),
         tempMax: Math.round(Math.max(...forecasts.map(f => f.main.temp_max))),
@@ -148,7 +150,20 @@ export class WeatherService {
     return result;
   }
 
-  // Mapping des codes météo vers des icônes FontAwesome
+  private findMidDayForecast(forecasts: ForecastItem[]): ForecastItem {
+    return forecasts.find(f => {
+      const hour = new Date(f.dt * 1000).getHours();
+      return hour >= 11 && hour <= 13;
+    }) || forecasts[0];
+  }
+
+  private getDayName(index: number, date: Date): string {
+    if (index === 0) return 'Demain';
+    
+    const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+    return dayNames[date.getDay()];
+  }
+
   private getWeatherIcon(weatherMain: string, icon: string): string {
     const isDay = icon.includes('d');
     

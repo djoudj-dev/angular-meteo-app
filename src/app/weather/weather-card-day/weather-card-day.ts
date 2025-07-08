@@ -8,7 +8,6 @@ import { WeatherDisplay } from '../../models/weather.interface';
   template: `
   <div class="card shadow-lg w-100 border-0">
     @if (weather()) {
-      <!-- En-tête avec localisation -->
       <div class="card-header bg-primary text-white py-3">
         <div class="d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center">
@@ -38,9 +37,7 @@ import { WeatherDisplay } from '../../models/weather.interface';
         </div>
       </div>
 
-      <!-- Corps principal -->
       <div class="card-body p-4">
-        <!-- Section principale avec icône et température -->
         <div class="row align-items-center mb-4">
           <div class="col-md-4 text-center">
             @if (weather()!.fontAwesomeIcon) {
@@ -69,7 +66,6 @@ import { WeatherDisplay } from '../../models/weather.interface';
           </div>
         </div>
 
-        <!-- Détails météorologiques -->
         <div class="row g-4">
           <div class="col-md-6">
             <div class="d-flex align-items-center p-3 bg-light rounded">
@@ -96,7 +92,6 @@ import { WeatherDisplay } from '../../models/weather.interface';
         </div>
       </div>
 
-      <!-- Pied de page -->
       <div class="card-footer bg-light text-center border-0">
         <small class="text-muted">
           <i class="fas fa-clock me-1"></i>

@@ -52,7 +52,6 @@ export class WeatherSearch {
   readonly error = signal<string | null>(null);
   readonly isLoading = signal<boolean>(false);
 
-  // Outputs pour communiquer avec le parent
   readonly weatherFound = output<WeatherDisplay>();
   readonly loadingChange = output<boolean>();
   readonly errorChange = output<string | null>();
@@ -62,10 +61,9 @@ export class WeatherSearch {
   onCityInputChange(event: Event): void {
     const target = event.target as HTMLInputElement;
     this.cityInput.set(target.value);
-    this.error.set(null); // Reset error when typing
+    this.error.set(null);
   }
 
-  // Méthode de recherche
   onSearch(): void {
     const city = this.cityInput().trim();
 
@@ -80,7 +78,7 @@ export class WeatherSearch {
     this.loadingChange.emit(true);
     this.errorChange.emit(null);
 
-    this.weatherService.getWeatherData(city).subscribe({
+    this.weatherService.getWeatherData({ type: 'city', city }).subscribe({
       next: (data) => {
         this.isLoading.set(false);
         this.loadingChange.emit(false);

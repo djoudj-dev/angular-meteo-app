@@ -32,7 +32,7 @@ export class App implements OnInit {
     this.isLocationWeather.set(false);
 
     const cityName = `${weather.name},${weather.country}`;
-    this.weatherService.getForecastData(cityName).subscribe({
+    this.weatherService.getForecastData({ type: 'city', city: cityName }).subscribe({
       next: (forecasts) => {
         this.forecasts.set(forecasts);
       },
@@ -72,7 +72,6 @@ export class App implements OnInit {
 
     this.geolocationService.getCurrentPosition().subscribe({
       next: (position) => {
-        // Charger la météo actuelle
         this.weatherService.getWeatherByCoordinates(position.latitude, position.longitude).subscribe({
           next: (weather) => {
             this.weather.set(weather);
@@ -85,7 +84,6 @@ export class App implements OnInit {
           }
         });
 
-        // Charger les prévisions
         this.weatherService.getForecastByCoordinates(position.latitude, position.longitude).subscribe({
           next: (forecasts) => {
             this.forecasts.set(forecasts);

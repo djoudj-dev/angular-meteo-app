@@ -49,13 +49,11 @@ import { WeatherCardDaysWeek } from './weather-card-days-week/weather-card-days-
   `,
 })
 export class WeatherDay {
-  // Inputs simples
   readonly weather = input<WeatherDisplay | null>(null);
   readonly forecasts = input<DayForecast[]>([]);
   readonly error = input<string | null>(null);
   readonly isLoading = input<boolean>(false);
 
-  // Outputs pour communiquer avec le parent
   readonly clearWeather = output<void>();
   readonly useLocation = output<void>();
 }
