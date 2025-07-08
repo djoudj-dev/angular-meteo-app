@@ -17,7 +17,7 @@ import { WeatherDisplay } from '../../models/weather.interface';
           [value]="cityInput()"
           (input)="onCityInputChange($event)"
           (keyup.enter)="onSearch()"
-          placeholder="Entrez une ville (ex: Paris, London)"
+          placeholder="Entrez une ville"
           [class.is-invalid]="error()"
           required
         />
