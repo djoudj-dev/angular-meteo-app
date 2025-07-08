@@ -1,0 +1,42 @@
+<header class="bg-primary text-white shadow-sm">
+  <div class="container-fluid px-4 py-3">
+    <div class="row align-items-center g-0">
+      <!-- Logo et titre -->
+      <div class="col-md-6 col-lg-4">
+        <h1 class="mb-0 d-flex align-items-center">
+          <i
+            class="fas fa-cloud-sun me-3 text-warning"
+            style="font-size: 2rem"
+          ></i>
+          <span class="fw-bold">Météo App</span>
+        </h1>
+      </div>
+
+      <!-- Barre de recherche -->
+      <div
+        class="col-md-6 col-lg-8 d-flex justify-content-end align-items-center"
+      >
+        <div style="max-width: 400px; width: 100%">
+          <app-weather-search
+            (weatherFound)="onWeatherFound($event)"
+            (loadingChange)="onLoadingChange($event)"
+            (errorChange)="onErrorChange($event)"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container-fluid px-4 mt-4">
+  <div class="d-flex justify-content-center">
+    <app-weather-day
+      [weather]="weather()"
+      [forecasts]="forecasts()"
+      [error]="error()"
+      [isLoading]="isLoading()"
+      (clearWeather)="clearWeather()"
+      (useLocation)="loadWeatherByLocation()"
+    />
+  </div>
+</main>

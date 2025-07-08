@@ -1,0 +1,117 @@
+<div class="px-8">
+  <div class="card shadow-lg border-0">
+    <div class="card-header bg-primary text-white py-3">
+      <div class="d-flex align-items-center">
+        <i class="fas fa-calendar-week me-3 fs-5"></i>
+        <h4 class="mb-0 fw-bold">Prévisions sur 5 jours</h4>
+      </div>
+    </div>
+
+    @if (forecasts().length > 0) {
+    <div class="card-body p-4">
+      <div class="row g-3">
+        @for (forecast of forecasts(); track forecast.date) {
+        <div class="col">
+          <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body p-3 text-center">
+              <!-- Jour -->
+              <h6
+                class="card-title fw-bold text-primary mb-3 border-bottom pb-2"
+              >
+                {{ forecast.dayName }}
+              </h6>
+
+              <!-- Icône météo -->
+              <div class="mb-3 text-center">
+                @if (forecast.fontAwesomeIcon) {
+                <i
+                  [class]="forecast.fontAwesomeIcon + ' fa-3x'"
+                  [style.color]="getIconColor(forecast.fontAwesomeIcon)"
+                  [title]="forecast.description"
+                ></i>
+                } @else {
+                <!-- Fallback avec icône soleil par défaut -->
+                <i
+                  class="fas fa-sun fa-3x text-warning"
+                  [title]="forecast.description"
+                ></i>
+                }
+              </div>
+
+              <!-- Températures -->
+              <div class="mb-3">
+                <div class="display-6 fw-bold text-dark mb-1">
+                  {{ forecast.temperature }}°C
+                </div>
+                <div
+                  class="d-flex justify-content-center align-items-center gap-2"
+                >
+                  <span class="badge bg-light text-dark border">
+                    <i class="fas fa-arrow-up text-danger me-1"></i>
+                    {{ forecast.tempMax }}°
+                  </span>
+                  <span class="badge bg-light text-dark border">
+                    <i class="fas fa-arrow-down text-info me-1"></i>
+                    {{ forecast.tempMin }}°
+                  </span>
+                </div>
+              </div>
+
+              <!-- Description -->
+              <p class="card-text text-capitalize text-muted mb-3 small">
+                {{ forecast.description }}
+              </p>
+
+              <!-- Détails météo -->
+              <div class="row g-2 small">
+                <div class="col-6">
+                  <div
+                    class="d-flex align-items-center justify-content-center p-2 bg-light rounded"
+                  >
+                    <i class="fas fa-tint text-info me-2"></i>
+                    <span class="fw-semibold">{{ forecast.humidity }}%</span>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div
+                    class="d-flex align-items-center justify-content-center p-2 bg-light rounded"
+                  >
+                    <i class="fas fa-wind text-success me-2"></i>
+                    <span class="fw-semibold">{{ forecast.windSpeed }}m/s</span>
+                  </div>
+                </div>
+                @if (forecast.precipitation > 0) {
+                <div class="col-12 mt-2">
+                  <div
+                    class="d-flex align-items-center justify-content-center p-2 bg-primary bg-opacity-10 rounded"
+                  >
+                    <i class="fas fa-cloud-rain text-primary me-2"></i>
+                    <span class="fw-semibold text-primary"
+                      >{{ forecast.precipitation }}% pluie</span
+                    >
+                  </div>
+                </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    } @else {
+    <div class="card-body">
+      <div class="text-center py-5">
+        <div class="mb-4">
+          <i class="fas fa-calendar-times display-1 text-muted opacity-50"></i>
+        </div>
+        <h5 class="text-muted mb-3">Aucune prévision disponible</h5>
+        <p class="text-muted mb-0">
+          <i class="fas fa-search me-2"></i>
+          Recherchez une ville pour afficher les prévisions météorologiques
+        </p>
+      </div>
+    </div>
+    }
+  </div>
+</div>
