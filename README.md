@@ -7,7 +7,7 @@
 
 Une application météo moderne et réactive développée avec Angular 20, permettant de consulter la météo actuelle et les prévisions sur 5 jours pour n'importe quelle ville dans le monde.
 
-URL du site : [https://angular-meteo-app-xi.vercel.app/](https://meteo.nedellec-julien.fr/)
+URL du site : https://meteo.nedellec-julien.fr/
 
 ![Application Météo](public/image.png)
 
